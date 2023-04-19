@@ -5,7 +5,7 @@
 
 /*declaration des variables*/
 mic_tcp_sock mysock;
-mc_tcp_sock_addr @sock_dest;
+mc_tcp_sock_addr addr_sock_dest;
 int PE = 0;
 int PA = 0;
 
@@ -87,7 +87,7 @@ int mic_tcp_send(int mic_sock, char* mesg, int mesg_size){
         PE =(PE + 1) % 2;
 
         /*envoi du pdu */
-        size_send = IP_send(pdu_send, @sock_dest);
+        size_send = IP_send(pdu_send, addr_sock_dest);
         nb_envoi ++ ;
 
         /*attente d'un ack */
@@ -98,14 +98,14 @@ int mic_tcp_send(int mic_sock, char* mesg, int mesg_size){
         ack.payload.data = malloc(ack.payload.size);
 
         while(!ack_recv){
-            if((ack.header.ack == 1) && (ack.header.ack_num == PE) && (IP_recv(&(ack),&@sock_dest, timeout >=0))){
+            if((ack.header.ack == 1) && (ack.header.ack_num == PE) && (IP_recv(&(ack),&addr_sock_dest, timeout >=0))){
                 /*reception du pdu avec PE == num*/
                 ack_recv = 1;
             }
             else{
                 /*expiration du timer (retransmission)*/
                 if(nb_envoi < Max_ENVOI){
-                    size_send = IP_send(pdu_send, @sock_dest);
+                    size_send = IP_send(pdu_send, addr_sock_dest);
                     nb_envoi++;
                 }
             }
