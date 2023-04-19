@@ -9,69 +9,86 @@ mc_tcp_sock_addr addr_sock_dest;
 int PE = 0;
 int PA = 0;
 
-/*creation d'un socket entre l'application et mic-tcp
-*rettourne le descriptzur du socket ou  -1 en cas d'erreur*/
-int mic_tcp_socket(start_mode sm){
-     printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");
-
-     if(initialize_components(sm)!=-1){
-        mysock.state = IDLE ;
-        mysock.fd = 0 ;
-        return mysock.fd ; /*descripteur du socket */
-     }
-     else{
-        return -1 ; /*echec lors de la creation du socket*/
-     }
+/*
+ * Permet de créer un socket entre l’application et MIC-TCP
+ * Retourne le descripteur du socket ou bien -1 en cas d'erreur
+ */
+int mic_tcp_socket(start_mode sm)
+{
+   int result = -1;
+   printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");   
+   result = initialize_components(sm) ;
+   if (result == -1 ){
+    return -1 ;
+   }else{
+    sock.fd = 0;
+    sock.state = IDLE;
+    return sock.fd ;
+   }
 }
 
-/*Attribution d'une @ au socket*/
-int mic_tcp_bind(int socket, mic_tcp_sock_addr addr){
-         printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");
-         if (mysock.fd==socket){
-            mysock.addr=addr;
-            return 0; /*attribution reussie*/
-         }
-         else{
-            return -1; /*attribution d'@ echoue*/
-        }
+/*
+ * Permet d’attribuer une adresse à un socket.
+ * Retourne 0 si succès, et -1 en cas d’échec
+ */
+int mic_tcp_bind(int socket, mic_tcp_sock_addr addr)
+{
+  int result = -1;
+   printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");
+   if (socket == sock.fd) {
+     sock.addr = addr ;
+     result = 0 ;
+   }   
+   return result;
 }
 
-/*Mettre le socket en etat  d'acceptation de connexion*/
-int mic_tcp_accept(int socket, mic_tcp_sock_addr* addr){
-        printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");
-        if(mysock.fd == socket){
-            mysock.state = Connected ;
-            return 0; /*socket pret a accepter les connexions*/
-        }
-        else{
-            return -1; /*echec d'operation*/
-        }
+
+/*
+ * Met le socket en état d'acceptation de connexions
+ * Retourne 0 si succès, -1 si erreur
+ */
+int mic_tcp_accept(int socket, mic_tcp_sock_addr* addr)
+{
+   int result = -1;
+   printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");  
+  if (socket == sock.fd) {
+    sock.state = CONNECTED;
+    result = 0;
+  }  
+  return result;
 }
 
-/*confiramation de l'etablissement de connexion*/
-int mic_tcp_connect(int socket, mic_tcp_sock_addr addr){
-    printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");
-    if(mysock.fd == socket){
-        mysock.state = Connected;
-        addr_sock_dest = addr;
-        return 0; /*etablissement de connexion reussie*/
-    }
-    else{
-        return -1; /*echec d'eatblissement de connexion*/
-    }
+/*
+ * Permet de réclamer l’établissement d’une connexion
+ * Retourne 0 si la connexion est établie, et -1 en cas d’échec
+ */
+int mic_tcp_connect(int socket, mic_tcp_sock_addr addr)
+{
+   int result = -1;
+   
+  printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");
+  if(socket == sock.fd){
+    sock.state = CONNECTED;
+    sock_addr = addr;
+    result = 0;
+  }
+  return result;
 }
 
-/*envoi de PDU*/
+/*
+ * Permet de réclamer l’envoi d’une donnée applicative
+ * Retourne la taille des données envoyées, et -1 en cas d'erreur
+ */
 int mic_tcp_send(int mic_sock, char* mesg, int mesg_size){
     printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");
-    int size_send;
+    int size_send = -1;
     int nb_envoi = 0;
     mic_tcp_pdu pdu_send;
     unsigned long timeout = 500;
     int ack_recv = 0;
 
     if((mysock.state == Connected) && (mysock.fd == mic_sock) ){
-        /*constrution du PDU a emettre */
+        //constrution du PDU 
         /*header*/
         pdu_send.header.source_port = mysock.addr.port;
         pdu_send.header.dest_port = addr_sock_dest.port;
@@ -80,30 +97,30 @@ int mic_tcp_send(int mic_sock, char* mesg, int mesg_size){
         pdu_send.header.fin = 0;
         pdu_send.header.seq_num = PE;
 
-        /*DU*/
+        //DU
         pdu_send.payload.data = mesg;
         pdu_send.payload.size = mesg_size;
 
         PE =(PE + 1) % 2;
 
-        /*envoi du pdu */
+        //envoi du pdu
         size_send = IP_send(pdu_send, addr_sock_dest);
         nb_envoi ++ ;
 
-        /*attente d'un ack */
-        mysock.state =  WAIT_FOR_ACK ;
+        //attente d'un ack
+        mysock.state =  WAIT_ACK ;
 
-        /*construction d'ack */
+        //construction d'ack
         ack.payload.size = 2*sizeof(short)2*sizeof(int)+3*sizeof(char);
         ack.payload.data = malloc(ack.payload.size);
 
         while(!ack_recv){
             if((ack.header.ack == 1) && (ack.header.ack_num == PE) && (IP_recv(&(ack),&addr_sock_dest, timeout >=0))){
-                /*reception du pdu avec PE == num*/
+                //reception du pdu avec PE == num
                 ack_recv = 1;
             }
             else{
-                /*expiration du timer (retransmission)*/
+                //expiration du timer (retransmission)
                 if(nb_envoi < Max_ENVOI){
                     size_send = IP_send(pdu_send, addr_sock_dest);
                     nb_envoi++;
@@ -112,7 +129,7 @@ int mic_tcp_send(int mic_sock, char* mesg, int mesg_size){
         }
     }
     else{
-        return -1 ; /*erreur n_socket ou prob de connexion*/
+        return -1 ; //erreur n_socket ou prob de connexion
     }
 
     mysock.state = Connected;
@@ -177,7 +194,7 @@ void process_received_PDU(mic_tcp_pdu pdu, mic_tcp_sock_addr addr)
     app_buffer_put(pdu.payload);
     PA = (PA +1) % 2;
   }
-  // sinon, n°seq != PA, rejet de la DT => PA reste le même
+  // sinon, n_seq != PA, rejet de la DT => PA reste le même
 
     /* Construction d'un ACK */
     // Header
