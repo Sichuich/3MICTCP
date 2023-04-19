@@ -51,11 +51,12 @@ int mic_tcp_accept(int socket, mic_tcp_sock_addr* addr)
 {
    int result = -1;
    printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");  
-  if (socket == sock.fd) {
+   if (socket == sock.fd) {
     sock.state = CONNECTED;
     result = 0;
-  }  
-  return result;
+   }  
+   return result;
+  
 }
 
 /*
@@ -188,15 +189,15 @@ void process_received_PDU(mic_tcp_pdu pdu, mic_tcp_sock_addr addr)
 
   printf("[MIC-TCP] Appel de la fonction: "); printf(__FUNCTION__); printf("\n");
 
-  if (pdu.header.seq_num == PA) { // n_seq == PA -->acceptation de DT
+  if (pdu.header.seq_num == PA) { // n_seq == PA 
     
-    /* Ajout de la charge utile du PDU recu dans le buffer de reception */
+    // Ajout de la charge utile du PDU recu 
     app_buffer_put(pdu.payload);
     PA = (PA +1) % 2;
   }
-  // sinon, n_seq != PA, rejet de la DT => PA reste le même
+  // sinon, PA pas change
 
-    /* Construction d'un ACK */
+    // Construction d'un ACK 
     // Header
     ack.header.source_port = mysock.addr.port;
     ack.header.dest_port = addr.port;
@@ -206,6 +207,6 @@ void process_received_PDU(mic_tcp_pdu pdu, mic_tcp_sock_addr addr)
     ack.header.ack_num = PA;
     ack.payload.size = 0; // pas de DU
 
-    /* Envoi de l'ACK */
+    // Envoi ACK 
     IP_send(ack, addr);
 }
