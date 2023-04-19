@@ -127,25 +127,36 @@ int mic_tcp_send(int mic_sock, char* mesg, int mesg_size){
  */
 int mic_tcp_recv (int socket, char* mesg, int max_mesg_size) //prend dans le buffer pour le donner à l'appli
 {
-  int nb_octets_lus=-1;
-  mic_tcp_payload pdu;
+  int deliver_size = -1;
+  mic_tcp_payload Payload;
+  
+    printf("[MIC-TCP] Appel de la fonction: "); printf(__FUNCTION__); printf("\n");
 
-  printf("[MIC-TCP] Appel de la fonction: "); printf(__FUNCTION__); printf("\n");
+  Payload.data = mesg;
+  Payload.size = max_mesg_size;
+    
+  if ((socket == sock.fd) && (sock.state == CONNECTED)) {
+    //WAIT for un PDU
+    sock.state = WAIT_PDU ;    
 
-  pdu.data = mesg;
-  pdu.size = max_mesg_size;
+    //récupérer la donnée applicative contenue dans le buffer 
+    deliver_size = app_buffer_get(Payload);
 
-  if ((mysock.state == Connected) && (mysock.fd == socket)){
-
-    /* Attente d'un PDU */
-    mysock.state = WAIT_FOR_PDU;
-
-    /* Recuperation d'un PDU dans le buffer de reception */
-    nb_octets_lus = app_buffer_get(pdu);
-    mysock.state = CONNECTED;
+    //revient state
+    sock.state = CONNECTED ;
   }
+  return deliver_size;  
+}
 
-  return nb_octets_lus;
+/*
+ * Permet de réclamer la destruction d’un socket.
+ * Engendre la fermeture de la connexion suivant le modèle de TCP.
+ * Retourne 0 si tout se passe bien et -1 en cas d'erreur
+ */
+int mic_tcp_close (int socket)
+{
+    printf("[MIC-TCP] Appel de la fonction :  "); printf(__FUNCTION__); printf("\n");
+    return -1;
 }
 
 /*
