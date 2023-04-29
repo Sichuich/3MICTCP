@@ -114,7 +114,9 @@ int mic_tcp_send (int mic_sock, char* mesg, int mesg_size)
     if ((IP_recv(&(ACK),&sock_addr, timeout) == -1) && (ACK.header.ack != 1) && (ACK.header.ack_num != PE)) { 
 	      sentsize = IP_send(PDU, sock_addr); // on rencoie le PDU a nouveau
       }
- }
+ }else{
+  return -1 ; //erreur n_socket ou prob de connexion
+  }
   sock.state = CONNECTED ;
   return sentsize;
 
