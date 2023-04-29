@@ -110,10 +110,17 @@ int mic_tcp_send (int mic_sock, char* mesg, int mesg_size)
     ACK.payload.data = malloc(ACK.payload.size);
 
     unsigned long timeout =100;
-    
-    if ((IP_recv(&(ACK),&sock_addr, timeout) == -1) && (ACK.header.ack != 1) && (ACK.header.ack_num != PE)) { 
-	      sentsize = IP_send(PDU, sock_addr); // on rencoie le PDU a nouveau
+    int controle = 0 ;
+    //on utilise la boucle puisque les pertes peuvent se produire plus d'une fois
+    while(controle == 0){
+       if ((IP_recv(&(ACK),&sock_addr, timeout) != -1) && (ACK.header.ack == 1) && (ACK.header.ack_num == PE)) { 
+	      controle = 1 ; //on tencoie plus ce pdu 
+       }else{
+         sentsize = IP_send(PDU, sock_addr); // on rencoie le PDU a nouveau
       }
+
+    }
+   
  }else{
   return -1 ; //erreur n_socket ou prob de connexion
   }
