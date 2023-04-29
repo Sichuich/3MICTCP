@@ -120,7 +120,7 @@ int mic_tcp_send (int mic_sock, char* mesg, int mesg_size)
     unsigned long timeout =100;
     int controle = 0 ;
     int result = -1 ;
-
+    //on utilise la boucle puisque les pertes peuvent se produire plus d'une fois
     while(controle == 0){
         /*on a bien recu l'ack correspondant au pdu envoye*/
         if (((result=IP_recv(&(ACK),&sock_addr, timeout)) != -1) && (ACK.header.ack == 1) && (ACK.header.ack_num == PE)) { 
