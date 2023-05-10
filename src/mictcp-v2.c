@@ -199,6 +199,6 @@ void process_received_PDU(mic_tcp_pdu pdu, mic_tcp_sock_addr addr)
     /* Envoi de l'acquitement */
     int s = IP_send(ACK, addr);
     if (s == -1){
-        printf("send erreur");
+        printf("IP_send erreur");
     }
 }
