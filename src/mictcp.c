@@ -11,7 +11,7 @@ mic_tcp_sock_addr sock_addr;
 int mic_tcp_socket(start_mode sm)
 {
    int result = -1;
-   int timer = 1000 ;
+   //int timer = 1000 ;
    printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");   
    result = initialize_components(sm); /* Appel obligatoire */
    set_loss_rate(500);
@@ -108,7 +108,7 @@ int mic_tcp_recv (int socket, char* mesg, int max_mesg_size)
   Payload.data = mesg;
   Payload.size = max_mesg_size;
     
-  if (socket == sock.fd) and (sock.state == CONNECTED) {
+  if (socket == sock.fd) & (sock.state == CONNECTED) {
     //WAIT for un PDU
     sock.state = WAIT_PDU ;    
 
