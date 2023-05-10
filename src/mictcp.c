@@ -108,7 +108,7 @@ int mic_tcp_recv (int socket, char* mesg, int max_mesg_size)
   Payload.data = mesg;
   Payload.size = max_mesg_size;
     
-  if (socket == sock.fd) & (sock.state == CONNECTED) {
+  if (socket == sock.fd) && (sock.state == CONNECTED) {
     //WAIT for un PDU
     sock.state = WAIT_PDU ;    
 
