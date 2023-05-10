@@ -226,7 +226,8 @@ void process_received_PDU(mic_tcp_pdu pdu, mic_tcp_sock_addr addr)
     ACK.header.fin = 0;
 
     /* Envoi de l'acquitement */
-    IP_send(ACK, addr);
-
-    
+    int s = IP_send(ACK, addr);
+    if (s == -1){
+        printf("send erreur");
+    }    
 }
