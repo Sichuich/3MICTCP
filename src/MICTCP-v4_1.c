@@ -1,15 +1,18 @@
 #include <mictcp.h>
 #include <api/mictcp_core.h>
-#define TAILLE 50
+#define TAILLE 15
 
 mic_tcp_sock sock;
 mic_tcp_sock_addr sock_addr;
 /*Variables pour le STOP & WAIT*/
 int PA = 0;
 int PE = 0;
-int perte_tolere = 10 ;
+int perte_tolere = 0 ;
 int tab[TAILLE] = {[0 ... TAILLE-1] = 1};
 int indice_prochain_mesg = 0;
+
+pthread_mutex_t mutrx = PTHREAD_MUTEX_INITIALIZER ;
+pthread_cond_t condx = PTHREAD_MUTEX_INITIALIZER ; 
 
 
 /*
@@ -23,6 +26,11 @@ int mic_tcp_socket(start_mode sm)
 
    /*reglation du pourcentage des pertes sur le reseau*/
    set_loss_rate(20);  
+   if(sm == CLIENT){
+    perte_tolere = 30 ;
+   }elseif(sm == SERVER){
+    perte_tolere = 10 ;
+   }
    result = initialize_components(sm) ;
    if (result == -1 ){
     return -1 ;
@@ -57,7 +65,38 @@ int mic_tcp_accept(int socket, mic_tcp_sock_addr* addr)
    int result = -1;
    printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");  
   if (socket == sock.fd) {
-    sock.state = CONNECTED;
+    sock.state = WAIT_SYN; //attente d'une demande de connexion
+     
+    /*reception d'une demande (SYN)*/
+    if(pthread_mutex_lock(&mutrx)!= 0){
+        printf("erreur de verrouillage");
+    }
+    while(sock.state == WAIT_SYN){
+        pthread_cond_wait(&condx, &mutrx);
+    }
+
+    if(pthread_mutex_unlock(&mutrx)!= 0){/*traitement termine*/
+        printf("erruer de deverouillage")
+    }
+
+    //construction d'aquitement de la demande de connexion (avec choix du pourcentage du perte )
+    mic_tcp_pdu SYN_ACK = {{sock.addr.port, addr->port, 0, perte_tolere,1,1,0}, {"",0}};
+    
+    /*envoi de SYN_ACK*/
+    int m = IP_send(SYN_ACK, *addr);
+    if(s == -1){
+        printf("erreur d'envoi");
+    }
+
+    /*attente d'un acquitement de la part du client*/
+    pthread_mutex_lock(&mutrx);
+    while(sock.state == WAIT_ACK){
+            pthread_cond_wait(&condx, &mut);
+    }
+    
+    if(pthread_mutex_unlock(&mutrx)!= 0){/*traitement termine*/
+        printf("erruer de deverouillage")
+    }
     result = 0;
   }  
   return result;
@@ -70,6 +109,13 @@ int mic_tcp_accept(int socket, mic_tcp_sock_addr* addr)
 int mic_tcp_connect(int socket, mic_tcp_sock_addr addr)
 {
    int result = -1;
+   mic_tcp_pdu SYN_ACK;
+   int SYN_ACK_recv = 0;
+   int pourcentage_perte_s;
+   
+
+   //construction du PDU SYN
+   mic_tcp_pdu  SYN = {{sock.addr.port, addr->port, 0, perte_tolere,1,1,0,0}, {"",0}};
    
   printf("[MIC-TCP] Appel de la fonction: ");  printf(__FUNCTION__); printf("\n");
   if(socket == sock.fd){
@@ -229,5 +275,6 @@ void process_received_PDU(mic_tcp_pdu pdu, mic_tcp_sock_addr addr)
     int s = IP_send(ACK, addr);
     if (s == -1){
         printf("IP_send erreur");
-    }    
+    }
+    
 }
