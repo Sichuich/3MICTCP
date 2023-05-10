@@ -1,6 +1,6 @@
 #include <mictcp.h>
 #include <api/mictcp_core.h>
-#define TAILLE 50
+#define TAILLE 15
 
 mic_tcp_sock sock;
 mic_tcp_sock_addr sock_addr;
