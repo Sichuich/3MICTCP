@@ -1,5 +1,6 @@
 #include <mictcp.h>
 #include <api/mictcp_core.h>
+#include <pthread.h>
 #define TAILLE 15
 
 mic_tcp_sock sock;
@@ -13,7 +14,7 @@ int tab[TAILLE] = {[0 ... TAILLE-1] = 1};
 int indice_prochain_mesg = 0;
 
 pthread_mutex_t mutrx = PTHREAD_MUTEX_INITIALIZER ;
-pthread_cond_t condx = PTHREAD_MUTEX_INITIALIZER ; 
+pthread_cond_t condx = PTHREAD_COND_INITIALIZER ; 
 
 
 /*
@@ -29,8 +30,9 @@ int mic_tcp_socket(start_mode sm)
    set_loss_rate(20);  
    if(sm == CLIENT){
     perte_tolere = 30 ;
-   }elseif(sm == SERVER){
+   }else {if(sm == SERVER){
     perte_tolere = 10 ;
+   }
    }
    result = initialize_components(sm) ;
    if (result == -1 ){
@@ -77,7 +79,7 @@ int mic_tcp_accept(int socket, mic_tcp_sock_addr* addr)
     }
 
     if(pthread_mutex_unlock(&mutrx)!= 0){/*traitement termine*/
-        printf("erruer de deverouillage")
+        printf("erruer de deverouillage");
     }
 
     //construction d'aquitement de la demande de connexion (avec choix du pourcentage du perte )
@@ -85,18 +87,18 @@ int mic_tcp_accept(int socket, mic_tcp_sock_addr* addr)
     
     /*envoi de SYN_ACK*/
     int m = IP_send(SYN_ACK, *addr);
-    if(s == -1){
+    if(m == -1){
         printf("erreur d'envoi");
     }
 
     /*attente d'un acquitement de la part du client*/
     pthread_mutex_lock(&mutrx);
     while(sock.state == WAIT_ACK){
-            pthread_cond_wait(&condx, &mut);
+            pthread_cond_wait(&condx, &mutrx);
     }
     
     if(pthread_mutex_unlock(&mutrx)!= 0){/*traitement termine et deverouillage du mutex*/
-        printf("erruer de deverouillage")
+        printf("erruer de deverouillage");
     }
     result = 0;
   }  
@@ -119,7 +121,7 @@ int mic_tcp_connect(int socket, mic_tcp_sock_addr addr)
   if(socket == sock.fd){
 
     //construction du PDU SYN
-    mic_tcp_pdu  SYN = {{sock.addr.port, addr.port, 0, 0,0,1,0,0}, {"",0}};
+    mic_tcp_pdu  SYN = {{sock.addr.port, addr.port, 0,0,1,0,0}, {"",0}};
     while(!SYN_ACK_recv){
 
       //Envoi de la la demande de connexion SYN
@@ -142,9 +144,9 @@ int mic_tcp_connect(int socket, mic_tcp_sock_addr addr)
           /*phase de negociation de %de perte tolere par le client et le serveur*/
           /*le plus petit % de perte sera aborde*/
           if(pourcentage_perte_s < perte_tolere){
-            perte_final = pourcentage_perte_s
+            perte_final = pourcentage_perte_s ;
           }else{
-            perte_final = perte_tolere
+            perte_final = perte_tolere ;
           }
           /*envoi d'un acquitement ACK*/
           mic_tcp_pdu ACK = {{sock.addr.port, addr.port, 0, perte_final,0,1,0},{"",0}};
@@ -297,20 +299,24 @@ void process_received_PDU(mic_tcp_pdu pdu, mic_tcp_sock_addr addr)
     if(sock.state == WAIT_SYN && pdu.header.syn == 1){
       /*lancement des threads qui sont en attente sur cond*/
       int f= pthread_cond_broadcast(&condx);
+      if(f!=0){
+        printf("erreur de broadcast");
+      }
       /*deverouillage du mutex*/
-      if(pthread_mutex_unlock(&mutrx)== -1 ){
+      if(pthread_mutex_unlock(&mutrx) != 0 ){
         printf("erreur de deverouillage du mutex");
       }
     }
     /*passant au cas d'une pdu mic_tcp*/
     // on teste le n°seq pour accepter la DU
-    else (pdu.header.seq_num == PA) { 
+    else{ 
+      if (pdu.header.seq_num == PA) { 
         app_buffer_put(pdu.payload);
         
         // Incrémentation de PA 
         PA = (PA +1) % 2;
     }
-
+    }
     // Concstruction d'un acquitement 
     ACK.header.source_port = sock.addr.port;
     ACK.header.dest_port = addr.port;
