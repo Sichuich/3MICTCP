@@ -8,7 +8,7 @@ mic_tcp_sock_addr sock_addr;
 int PA = 0;
 int PE = 0;
 int perte_tolere = 10 ;
-int tab[TAILLE] = {[0 ... TAILLE-1] = 1};
+int tab[TAILLE] = {[0 ... TAILLE-1] = 1}; //febetre glissante
 int indice_prochain_mesg = 0;
 
 
