@@ -10,7 +10,7 @@ int PA = 0;
 int PE = 0;
 int perte_tolere = 0 ;
 int perte_final = 0 ;
-int tab[TAILLE] = {[0 ... TAILLE-1] = 1};
+int tab[TAILLE] = {[0 ... TAILLE-1] = 1};//fenetre glissante
 int indice_prochain_mesg = 0;
 
 pthread_mutex_t mutrx = PTHREAD_MUTEX_INITIALIZER ;
