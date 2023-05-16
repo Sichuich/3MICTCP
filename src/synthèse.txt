@@ -1,0 +1,67 @@
+Protocole MICTCP
+Introduction
+MICTCP (Mini Internet Control Transmission Protocol) est un protocole de transport fiable basé sur le protocole TCP. Il offre des fonctionnalités de communication orientée connexion, de contrôle de flux, de contrôle de congestion et de gestion des pertes. La version 4.1 de MICTCP étend la phase de transfert de données de la version 3 et ajoute une phase d'établissement de connexion ainsi qu'un mécanisme de reprise des pertes de type "Stop and Wait".
+
+Fonctionnalités clés
+Connexion orientée : Le protocole MICTCP établit une connexion entre l'expéditeur et le destinataire avant de transférer les données. Cela garantit une communication fiable et ordonnée.
+
+Contrôle de flux : MICTCP utilise un mécanisme de contrôle de flux pour éviter la congestion du réseau. L'expéditeur ajuste son débit en fonction des capacités du destinataire pour garantir des transmissions fluides.
+
+Contrôle de congestion : Le protocole MICTCP utilise des mécanismes de contrôle de congestion tels que le contrôle de fenêtre pour éviter la congestion du réseau. Il adapte dynamiquement la taille de la fenêtre d'envoi en fonction de l'état du réseau.
+
+Mécanisme "Stop and Wait" : MICTCP v4.1 utilise un mécanisme de reprise des pertes de type "Stop and Wait". L'expéditeur envoie un paquet de données, puis attend l'acquittement du destinataire avant d'envoyer le paquet suivant. Cela garantit une transmission fiable des données.
+
+Négociation du taux de perte admissible : Pendant la phase d'établissement de connexion, les deux parties négocient un pourcentage de perte admissible. Ce pourcentage indique la quantité de perte de données tolérée avant que le protocole n'effectue une retransmission.
+
+Phases de MICTCP
+Phase d'établissement de connexion :
+
+Le client envoie une demande de connexion au serveur.
+Le serveur accepte la demande de connexion et envoie une réponse au client.
+Une fois que la connexion est établie, les deux parties passent à la phase de transfert de données.
+Phase de transfert de données :
+
+Le client envoie des données au serveur en utilisant le mécanisme "Stop and Wait".
+Le serveur reçoit les données et envoie un acquittement pour confirmer la réception.
+Le client attend l'acquittement avant d'envoyer le paquet suivant.
+Ce processus se répète jusqu'à ce que toutes les données soient transférées.
+Phase de fermeture de connexion :
+
+Une fois que toutes les données ont été transférées, le client envoie une demande de fermeture de connexion au serveur.
+Le serveur accepte la demande de fermeture de connexion et envoie une réponse au client.
+Les deux parties ferment la connexion et terminent la communication.
+
+MICTCP-v1 :
+- Cette version de MICTCP met en œuvre toutes les fonctions de base du protocole.
+- Les fonctions ont été testées et fonctionnent correctement.
+- Compilation : exécutez la commande "make".
+- Testez MICTCP avec tsock_texte :
+   - Pour le côté passif : exécutez "tsock_texte -p".
+   - Pour le côté actif : exécutez "tsock_texte -s".
+
+MICTCP-v2 :
+- Cette version de MICTCP inclut un mécanisme de reprise des pertes pour garantir la réception des paquets en les renvoyant plusieurs fois jusqu'à ce qu'ils soient correctement reçus par le destinataire.
+- Les fonctions ont été implémentées et testées avec succès.
+- Compilation : exécutez la commande "make".
+- Testez MICTCP avec tsock_texte :
+   - Pour le côté passif : exécutez "tsock_texte -p".
+   - Pour le côté actif : exécutez "tsock_texte -s".
+
+MICTCP-v3 :
+- Cette version de MICTCP améliore le mécanisme de reprise des pertes en utilisant une fenêtre glissante.
+- Toutes les fonctions ont été implémentées et testées avec succès.
+- Compilation : exécutez la commande "make".
+- Testez MICTCP avec tsock_texte :
+   - Pour le côté passif : exécutez "tsock_texte -p".
+   - Pour le côté actif : exécutez "tsock_texte -s".
+
+MICTCP-v4.1 :
+- Cette version de MICTCP étend la fonctionnalité en ajoutant une phase d'établissement de connexion et une garantie de fiabilité partielle avec le mécanisme de reprise des pertes de type "Stop and Wait".
+- Les pourcentages de pertes tolérables sont négociés pendant la phase d'établissement de la connexion.
+- Toutes les fonctions ont été implémentées et testées avec succès.
+- Compilation : exécutez la commande "make".
+- Testez MICTCP avec tsock_texte :
+   - Pour le côté passif : exécutez "tsock_texte -p".
+   - Pour le côté actif : exécutez "tsock_texte -s".
+
+Ces versions de MICTCP ont été développées et testées pour assurer leur bon fonctionnement dans différents scénarios. Elles apportent des améliorations et des fonctionnalités supplémentaires à chaque itération, permettant une meilleure performance et une meilleure fiabilité du protocole de communication.
